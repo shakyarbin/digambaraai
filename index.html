@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceGUARD2 - Voice Test</title>
+    <style>
+        * { box-sizing: border-box; }
+        :root{
+            --bg1:#0ea5ff;--bg2:#0066ff;--card:rgba(255,255,255,.12);--muted:rgba(255,255,255,.85);
+            --accent:#0b5cff;--danger:#ff3b3b;--ok:#10ac84;--ink:#11233c;
+        }
+        body{
+            margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
+            font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial;
+            background: radial-gradient(1200px 800px at 50% -100px, #71d1ff33 20%, transparent 60%),
+                        linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 100%);
+            color:#fff;
+        }
+        .app{ width:100%; max-width:840px; padding:24px; }
+        .card{ background:var(--card); backdrop-filter: blur(10px); border:1px solid #ffffff2a; border-radius:22px; padding:26px; box-shadow: 0 24px 60px #002a611f; }
+        .title{ margin:0; font-size:30px; font-weight:900; letter-spacing:.2px; text-align:center; }
+        .subtitle{ margin:6px 0 22px; text-align:center; opacity:.95; }
+
+        /* Header status */
+        .status-row{ display:flex; align-items:center; gap:12px; justify-content:center; flex-wrap:wrap; margin-bottom:12px; }
+        .chip{ display:inline-flex; align-items:center; gap:8px; padding:6px 12px; border-radius:999px; font-weight:800; letter-spacing:.5px; font-size:12px; border:1px solid #ffffff40; background:#ffffff17; }
+        .chip.live{ background:#ff4d6e22; border-color:#ff6f8a66; color:#fff; }
+        .dot{ width:10px; height:10px; border-radius:50%; background:#ff657a; box-shadow:0 0 0 0 rgba(255,101,122,.8); animation: pulseDot 1.6s infinite; }
+        @keyframes pulseDot{ 0%{box-shadow:0 0 0 0 rgba(255,101,122,.8);} 70%{box-shadow:0 0 0 12px rgba(255,101,122,0);} 100%{box-shadow:0 0 0 0 rgba(255,101,122,0);} }
+        .timer{ font-variant-numeric: tabular-nums; font-weight:800; }
+
+        /* Controls */
+        .controls{ display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin:10px 0 18px; }
+        .btn{ appearance:none; border:0; padding:14px 18px; border-radius:14px; font-weight:800; cursor:pointer; box-shadow:0 10px 26px #0019482a; transition: transform .06s ease, background .2s ease; }
+        .btn:active{ transform: translateY(1px); }
+        .btn-primary{ background:linear-gradient(180deg,#2d7bff,#0b5cff); color:#fff; }
+        .btn-primary:hover{ background:linear-gradient(180deg,#3a86ff,#1a63ff); }
+        .btn-danger{ background:linear-gradient(180deg,#ff5b5b,#ff3b3b); color:#fff; }
+        .btn-danger:hover{ background:linear-gradient(180deg,#ff6e6e,#ff4f4f); }
+        .btn-secondary{ background:#ffffff; color:#0b5cff; }
+        .btn-secondary:hover{ background:#f4f7ff; }
+        .btn-hero{ padding:18px 28px; font-size:18px; border-radius:16px; box-shadow:0 16px 36px #002a7a3a; }
+        .btn-hero#btnTest{ transform:scale(1.02); }
+        .hint{ text-align:center; opacity:.95; font-size:14px; }
+
+        /* Wave + searching */
+        .panel{ background:linear-gradient(180deg,#05b2ff 0%, #0a8df7 100%); border:1px solid #ffffff2b; border-radius:18px; padding:22px; position:relative; overflow:hidden; }
+        .ring{ position:absolute; border-radius:50%; border:2px solid rgba(255,255,255,.38); animation: ring 2.8s infinite ease-out; opacity:.8;}
+        .ring.r1{ width:160px; height:160px; left:50%; top:50%; transform:translate(-50%,-50%); }
+        .ring.r2{ width:240px; height:240px; left:50%; top:50%; transform:translate(-50%,-50%); animation-delay:.4s; }
+        .ring.r3{ width:320px; height:320px; left:50%; top:50%; transform:translate(-50%,-50%); animation-delay:.8s; }
+        @keyframes ring{ 0%{ opacity:.9; transform:translate(-50%,-50%) scale(.9);} 70%{ opacity:.15;} 100%{ opacity:0; transform:translate(-50%,-50%) scale(1.05);} }
+
+        .panel-inner{ display:grid; grid-template-columns: 1fr; gap:16px; place-items:center; position:relative; z-index:2; }
+        .logo{ width:92px; height:92px; border-radius:50%; display:grid; place-items:center; background:#fff; color:#0aa2ff; font-weight:900; font-size:34px; box-shadow:0 12px 30px #0047a433; }
+        .panel-title{ font-weight:900; font-size:22px; }
+        .panel-sub{ opacity:.96; }
+
+        /* Visualizer */
+        .scope-wrap{ width:100%; max-width:720px; height:300px; background:#00153a3b; border:1px solid #ffffff2b; border-radius:14px; overflow:hidden; }
+        #scope{ width:100%; height:300px; display:block; }
+
+        /* Processing card */
+        .processing{ display:none; margin-top:16px; background:#ffffff; color:var(--ink); border-radius:14px; padding:18px; border:1px solid #e8eefc; text-align:center; }
+        .spinner{ width:24px; height:24px; border-radius:50%; border:3px solid #e8eefc; border-top-color:#0b5cff; display:inline-block; animation:spin 1s linear infinite; margin-right:8px; vertical-align:middle; }
+        @keyframes spin{ to{ transform: rotate(360deg);} }
+
+        /* Result */
+        .result{ display:none; margin-top:18px; background:#fff; color:var(--ink); border-radius:16px; padding:18px; border:1px solid #e8eefc; }
+        .badge{ display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border-radius:999px; font-weight:800; font-size:12px; letter-spacing:.5px; }
+        .badge-ai{ background:#ffe6e9; color:#b30021; border:1px solid #ffc4cd; }
+        .grid{ display:grid; grid-template-columns: repeat(1,minmax(0,1fr)); gap:14px; }
+        .metric{ background:#f6f9ff; border:1px solid #e6edff; border-radius:12px; padding:14px; }
+        .metric h4{ margin:0 0 6px; font-size:12px; color:#405168; letter-spacing:.4px; }
+        .metric .val{ font-size:20px; font-weight:900; color:#0b5cff; }
+        .bar{ margin-top:10px; height:10px; background:#e9eefc; border-radius:8px; overflow:hidden; }
+        .bar .fill{ height:100%; width:0%; background: linear-gradient(90deg,#ff477e,#ff7a59); transition: width 800ms ease; }
+        .footer-hint{ text-align:center; opacity:.9; margin-top:10px; font-size:13px; }
+        .hide{ display:none !important; }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="card">
+            <h1 class="title">Voice Test</h1>
+            <p class="subtitle">Test live from your microphone or upload a file.</p>
+
+            <div class="status-row">
+                <span id="liveChip" class="chip"><span class="dot" style="opacity:0"></span> READY</span>
+                <span class="chip">TIMER <span id="timer" class="timer">00:00</span></span>
+            </div>
+
+            <div class="controls">
+                <button id="btnTest" class="btn btn-primary btn-hero">Test (Live)</button>
+                <button id="btnStop" class="btn btn-danger hide">Stop</button>
+                <label class="btn btn-secondary" for="fileInput">Upload Audio</label>
+                <input id="fileInput" type="file" accept="audio/*" hidden />
+            </div>
+            <p class="hint">Priority: live test. Use Stop to end recording. Upload supports pre‑recorded audio.</p>
+
+            <!-- Searching panel is hidden until Test (Live) starts -->
+            <div id="panel" class="panel hide">
+                <div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div>
+                <div class="panel-inner">
+                    <div class="logo">S</div>
+                    <div class="panel-title" id="panelTitle">Searching for a match</div>
+                    <div class="panel-sub" id="panelSub">Please wait</div>
+                    <div class="scope-wrap"><canvas id="scope"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Processing in-between card -->
+            <div id="processing" class="processing">
+                <span class="spinner"></span>
+                Processing your audio…
+            </div>
+
+            <div id="result" class="result">
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+                    <h3 style="margin:0;font-size:20px;">Analysis Result</h3>
+                    <span class="badge badge-ai">AI DETECTED</span>
+                </div>
+                <div class="grid" style="margin-top:12px;">
+                    <div class="metric">
+                        <h4>AI Probability</h4>
+                        <div id="aiVal" class="val">92%</div>
+                        <div class="bar"><div id="aiBar" class="fill" style="width:0%"></div></div>
+                    </div>
+                </div>
+                <p class="footer-hint">Results summary</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Elements
+        const btnTest = document.getElementById('btnTest');
+        const btnStop = document.getElementById('btnStop');
+        const fileInput = document.getElementById('fileInput');
+        const panel = document.getElementById('panel');
+        const processing = document.getElementById('processing');
+        const result = document.getElementById('result');
+        const aiBar = document.getElementById('aiBar');
+        const aiVal = document.getElementById('aiVal');
+        const liveChip = document.getElementById('liveChip');
+        const timerEl = document.getElementById('timer');
+        const panelTitle = document.getElementById('panelTitle');
+        const panelSub = document.getElementById('panelSub');
+
+        // Visualizer
+        const scope = document.getElementById('scope');
+        const ctx = scope.getContext('2d');
+        let audioCtx, analyser, sourceNode, dataArray, rafId, mediaStream, mediaRecorder;
+        let startedAt = 0, timerId = 0;
+
+        const RESULT_DELAY_LIVE = 4200; // ms (show result after delay)
+        const RESULT_DELAY_UPLOAD = 1000; // ms
+        const AMPLIFY = 1.6; // increase waveform amplitude
+
+        function setLive(on){
+            if(on){ liveChip.classList.add('live'); liveChip.innerHTML = '<span class="dot"></span> LIVE'; }
+            else { liveChip.classList.remove('live'); liveChip.innerHTML = 'READY'; }
+        }
+        function startTimer(){
+            startedAt = Date.now();
+            timerId = setInterval(() => {
+                const s = Math.floor((Date.now()-startedAt)/1000);
+                const m = String(Math.floor(s/60)).padStart(2,'0');
+                const ss = String(s%60).padStart(2,'0');
+                timerEl.textContent = `${m}:${ss}`;
+            }, 200);
+        }
+        function stopTimer(){ clearInterval(timerId); }
+
+        function drawScope(){
+            const {width, height} = scope.getBoundingClientRect();
+            if(scope.width !== width){ scope.width = width; scope.height = height; }
+            ctx.clearRect(0,0,scope.width,scope.height);
+            if(!analyser) return;
+            analyser.getByteTimeDomainData(dataArray);
+            ctx.lineWidth = 2; ctx.strokeStyle = '#ffffff'; ctx.beginPath();
+            const slice = scope.width / dataArray.length;
+            const mid = height/2; // baseline
+            let x = 0;
+            for(let i=0;i<dataArray.length;i++){
+                const v = dataArray[i]/128.0 - 1.0; // center around 0
+                const y = mid + v * mid * AMPLIFY; // amplify around baseline
+                if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+                x+=slice;
+            }
+            ctx.stroke();
+            rafId = requestAnimationFrame(drawScope);
+        }
+        function stopScope(){ cancelAnimationFrame(rafId); ctx.clearRect(0,0,scope.width,scope.height); }
+
+        function showResult(){
+            processing.style.display = 'none';
+            result.style.display = 'block';
+            const ai=92; aiVal.textContent=ai+'%';
+            requestAnimationFrame(()=>{ aiBar.style.width=ai+'%'; });
+        }
+        function resetUI(){
+            btnStop.classList.add('hide'); btnTest.classList.remove('hide');
+            setLive(false); stopTimer(); timerEl.textContent='00:00';
+            processing.style.display='none';
+            result.style.display='none'; aiBar.style.width='0%';
+            panel.classList.add('hide'); // hidden until live starts
+            panelTitle.textContent='Searching for a match'; panelSub.textContent='Please wait';
+        }
+
+        async function startLive(){
+            try{
+                // Show panel only when starting live test
+                panel.classList.remove('hide');
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioCtx.createAnalyser(); analyser.fftSize = 2048; const bufferLength = analyser.fftSize; dataArray = new Uint8Array(bufferLength);
+                mediaStream = await navigator.mediaDevices.getUserMedia({audio:true});
+                sourceNode = audioCtx.createMediaStreamSource(mediaStream); sourceNode.connect(analyser);
+                mediaRecorder = new MediaRecorder(mediaStream); mediaRecorder.start();
+                drawScope(); setLive(true); startTimer();
+                panelTitle.textContent='Listening…'; panelSub.textContent='Speak now, press Stop to analyze';
+            }catch(e){ alert('Microphone access denied or unavailable.'); console.warn(e); panel.classList.add('hide'); }
+        }
+        function stopLive(){
+            try{ mediaRecorder && mediaRecorder.stop(); }catch(_){ }
+            try{ mediaStream && mediaStream.getTracks().forEach(t=>t.stop()); }catch(_){ }
+            try{ sourceNode && sourceNode.disconnect(); analyser && analyser.disconnect(); audioCtx && audioCtx.close(); }catch(_){ }
+            stopScope(); setLive(false); stopTimer();
+            // Hide the panel and show a processing card during the delay
+            panel.classList.add('hide');
+            processing.style.display = 'block';
+            setTimeout(showResult, RESULT_DELAY_LIVE);
+        }
+
+        // Event handlers
+        btnTest.addEventListener('click', async ()=>{ btnTest.classList.add('hide'); btnStop.classList.remove('hide'); await startLive(); });
+        btnStop.addEventListener('click', ()=>{ btnStop.classList.add('hide'); btnTest.classList.remove('hide'); stopLive(); });
+        fileInput.addEventListener('change', async ()=>{
+            if(!fileInput.files || !fileInput.files[0]) return;
+            result.style.display='none'; aiBar.style.width='0%';
+            processing.style.display='block';
+            setTimeout(showResult, RESULT_DELAY_UPLOAD);
+        });
+
+        // Initial
+        resetUI();
+    </script>
+</body>
+</html>
