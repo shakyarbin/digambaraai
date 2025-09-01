@@ -20,6 +20,10 @@
         }
         .app{ width:100%; max-width:840px; padding:24px; }
         .card{ background:var(--card); backdrop-filter: blur(10px); border:1px solid #ffffff2a; border-radius:22px; padding:26px; box-shadow: 0 24px 60px #002a611f; }
+        
+        /* Header with logo and title */
+        .header{ display:flex; align-items:center; justify-content:center; gap:16px; margin-bottom:16px; }
+        .logo-img{ width:48px; height:48px; border-radius:12px; object-fit:cover; }
         .title{ margin:0; font-size:30px; font-weight:900; letter-spacing:.2px; text-align:center; }
         .subtitle{ margin:6px 0 22px; text-align:center; opacity:.95; }
 
@@ -84,7 +88,10 @@
 <body>
     <div class="app">
         <div class="card">
-            <h1 class="title">DigambaraAI</h1>
+            <div class="header">
+                <img src="logo.png" alt="DigambaraAI Logo" class="logo-img">
+                <h1 class="title">DigambaraAI</h1>
+            </div>
             <p class="subtitle">Test live from your microphone or upload a file.</p>
 
             <div class="status-row">
@@ -98,15 +105,13 @@
                 <label class="btn btn-secondary" for="fileInput">Upload Audio</label>
                 <input id="fileInput" type="file" accept="audio/*" hidden />
             </div>
-            <p class="hint">Use Stop to end recording. Upload supports pre‑recorded audio.</p>
+            <p class="hint">Priority: live test. Use Stop to end recording. Upload supports pre‑recorded audio.</p>
 
             <!-- Searching panel is hidden until Test (Live) starts -->
             <div id="panel" class="panel hide">
                 <div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div>
                 <div class="panel-inner">
-                    <div class="logo">
-                        <img src="logo.png" alt="DigambaraAI Logo" style="width:100%; height:100%; object-fit:contain;">
-                    </div>
+                    <div class="logo">S</div>
                     <div class="panel-title" id="panelTitle">Searching for a match</div>
                     <div class="panel-sub" id="panelSub">Please wait</div>
                     <div class="scope-wrap"><canvas id="scope"></canvas></div>
